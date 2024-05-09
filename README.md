@@ -1,7 +1,7 @@
 # capdi
 자료공유
 
-https://github.com/italojs/facial-landmarks-recognition에서 main.py 수정해서 진행중
+https://github.com/italojs/facial-landmarks-recognition 에서 main.py 수정해서 진행중
 
 shape_predictor_68_face_landmarks.dat기반 랜드마크 추출이고
 txt파일에 x,y좌표 저장됨.
