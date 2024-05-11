@@ -3,8 +3,10 @@
 
 https://github.com/italojs/facial-landmarks-recognition 에서 main.py 수정해서 진행중
 
+https://github.com/italojs/facial-landmarks-recognition/blob/master/shape_predictor_68_face_landmarks.dat <<여기서 데이터셋
 shape_predictor_68_face_landmarks.dat기반 랜드마크 추출이고
 txt파일에 x,y좌표 저장됨.
+
 
 
 [landmark_compare.py]
