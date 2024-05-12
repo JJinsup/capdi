@@ -25,10 +25,11 @@ Normalization in Face Recognition with Dlib Facial Landmarks 참고해서
 
 [landmark_cropped_compare.py]
 원래 비교 방법이랑 똑같은데 frame에다가 cropped처럼 전처리 하고 랜드마크 추출해서 저장한 다음 비교함.
-threshold25까지는 내 사진이랑 TRUE. 25미만은 FALSE나옴...(다른 사진이랑은 threshold 40?까지 FALSE나옴)
+threshold30까지는 내 사진이랑 TRUE. 30미만은 FALSE나옴...(다른 사진이랑은 threshold 40?까지 FALSE나옴)
++cropped이미지에는 랜드마크가 안뽑힘.. rotated에서는 뽑히는데
 
 참고자료
-https://github.com/khanetor/face-alignment-dlib에서 app.py
-https://blog.naver.com/chandong83/221488347537(dlib관련 좋은 사용법 많음)
-https://ukayzm.github.io/unknown-face-classifier/(distance비교하는 방식이 좀 달라서 낼 해볼게)
-https://wnsgur0329.tistory.com/21(encoding)
+https://github.com/khanetor/face-alignment-dlib            에서 app.py
+https://blog.naver.com/chandong83/221488347537        (dlib관련 좋은 사용법 많음)
+https://ukayzm.github.io/unknown-face-classifier/          (distance비교하는 방식이 좀 달라서 낼 해볼게)
+https://wnsgur0329.tistory.com/21          (encoding)
