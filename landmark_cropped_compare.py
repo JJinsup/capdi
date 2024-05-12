@@ -48,8 +48,10 @@ if len(dets) > 0:
         M = get_rotation_matrix(left_eye, right_eye)
         rotated = cv2.warpAffine(img, M, (s_width, s_height), flags=cv2.INTER_CUBIC)
 
+        cropped = crop_image(rotated, det)
+
         # cropped 이미지에서 얼굴 랜드마크 추출
-        cropped_shape = predictor(rotated, det)
+        cropped_shape = predictor(cropped, det)
         cropped_shape = face_utils.shape_to_np(cropped_shape)
 
         landmarks_list.append(cropped_shape)
