@@ -25,10 +25,21 @@ def get_face_chip(img, landmarks):
     face_chip = dlib.get_face_chip(rotated_img, landmarks, size=150, padding=0.25)
     return face_chip
 
+#랜드마크를 사용해서 얼굴 중심 계산
+def calculate_face_center(landmarks):
 
+    x_coords = [x for x, y in landmarks]
+    y_coords = [y for x, y in landmarks]
+    center_x = sum(x_coords) / len(x_coords)
+    center_y = sum(y_coords) / len(y_coords)
+    return (center_x, center_y)
+
+#랜드마크 정규화
 def normalize_landmarks(landmarks, img_shape):
-    normalized = [(x / img_shape[1], y / img_shape[0]) for x, y in landmarks]
-    return normalized
+
+    face_center = calculate_face_center(landmarks)
+    normalized_landmarks = [( (x - face_center[0]) / img_shape[1], (y - face_center[1]) / img_shape[0]) for x, y in landmarks]
+    return normalized_landmarks
 
 
 student_id = input("학번을 입력하세요:") # input안에 회원가입창에서 입력받은 값을 넣어주면될듯
