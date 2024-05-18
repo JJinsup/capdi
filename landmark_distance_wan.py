@@ -27,16 +27,30 @@ def get_face_chip(img, landmarks):
     face_chip = dlib.get_face_chip(rotated_img, landmarks, size=150, padding=0.25)
     return face_chip
 
-def normalize_landmarks(landmarks, img_shape):
-    normalized = [(x / img_shape[1], y / img_shape[0]) for x, y in landmarks]
-    return normalized
+#랜드마크를 사용해서 얼굴 중심 계산
+def calculate_face_center(landmarks):
 
+    x_coords = [x for x, y in landmarks]
+    y_coords = [y for x, y in landmarks]
+    center_x = sum(x_coords) / len(x_coords)
+    center_y = sum(y_coords) / len(y_coords)
+    return (center_x, center_y)
+
+#랜드마크 정규화
+def normalize_landmarks(landmarks, img_shape):
+
+    face_center = calculate_face_center(landmarks)
+    normalized_landmarks = [( (x - face_center[0]) / img_shape[1], (y - face_center[1]) / img_shape[0]) for x, y in landmarks]
+    return normalized_landmarks
+
+#유클리안 거리 계산 알고리즘
 def euclidean_distance(p1, p2):
     """
     Calculate the Euclidean distance between two points.
     """
     return np.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
 
+#랜드마크 읽어오기
 def read_landmarks(file_path):
     """
     Read landmarks from a .txt file.
