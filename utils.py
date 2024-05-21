@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 import dlib
+from scipy.spatial import procrustes
+
 
 LEFT_EYE_INDICES = [36, 37, 38, 39, 40, 41]
 RIGHT_EYE_INDICES = [42, 43, 44, 45, 46, 47]
@@ -13,7 +15,7 @@ def rect_to_tuple(rect):
     return left, top, right, bottom
 
 def extract_eye(shape, eye_indices):
-    points = map(lambda i: shape.part(i), eye_indices)
+    points = [shape.part(i) for i in eye_indices]
     return list(points)
 
 def extract_eye_center(shape, eye_indices):
@@ -62,7 +64,7 @@ def get_face_chip(img, landmarks):
     rotated_img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
     # 새로운 얼굴 크기와 위치로 이동
-    face_chip = dlib.get_face_chip(rotated_img, landmarks, size=150, padding=0.25)
+    face_chip = dlib.get_face_chip(rotated_img, landmarks, size=200, padding=0.35)
     return face_chip
 
 #랜드마크를 사용해서 얼굴 중심 계산
@@ -83,9 +85,7 @@ def normalize_landmarks(landmarks, img_shape):
 
 #유클리안 거리 계산 알고리즘
 def euclidean_distance(p1, p2):
-    """
-    Calculate the Euclidean distance between two points.
-    """
+
     return np.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
 
 #랜드마크 읽어오기
@@ -116,3 +116,31 @@ def compare_landmarks(landmarks1, landmarks2, threshold):
             return similarity_score, True
         else:
             return similarity_score, False
+        
+def procrustes_analysis(landmarks1, landmarks2):
+    """
+    Perform Procrustes analysis to compare two sets of landmarks.
+    """
+    mtx1, mtx2, disparity = procrustes(landmarks1, landmarks2)
+    return disparity
+
+def compare_landmarks_procrustes(landmarks1, landmarks2, threshold):
+    """
+    Compare two sets of landmarks using Procrustes analysis.
+    """
+    if len(landmarks1) != len(landmarks2):
+        raise ValueError("Number of landmarks must be the same for comparison.")
+    
+    # Normalize the landmarks by scaling them between 0 and 1
+    landmarks1 = np.array(landmarks1)
+    landmarks2 = np.array(landmarks2)
+    
+    landmarks1 = (landmarks1 - landmarks1.min(0)) / landmarks1.ptp(0)
+    landmarks2 = (landmarks2 - landmarks2.min(0)) / landmarks2.ptp(0)
+    
+    disparity = procrustes_analysis(landmarks1, landmarks2)
+    
+    if disparity < threshold:
+            return disparity, True
+    else:
+            return disparity, False
