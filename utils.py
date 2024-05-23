@@ -64,7 +64,7 @@ def get_face_chip(img, landmarks):
     rotated_img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
     # 새로운 얼굴 크기와 위치로 이동
-    face_chip = dlib.get_face_chip(rotated_img, landmarks, size=200, padding=0.35)
+    face_chip = dlib.get_face_chip(rotated_img, landmarks, size=300, padding=0.3)
     return face_chip
 
 #랜드마크를 사용해서 얼굴 중심 계산
@@ -77,7 +77,9 @@ def calculate_face_center(landmarks):
     return (center_x, center_y)
 
 #랜드마크 정규화
-def normalize_landmarks(landmarks, img_shape):
+def normalize_landmarks(landmarks, img_shape):    
+    if not landmarks:
+        return None  # 랜드마크가 비어 있으면 None 반환
 
     face_center = calculate_face_center(landmarks)
     normalized_landmarks = [( (x - face_center[0]) / img_shape[1], (y - face_center[1]) / img_shape[0]) for x, y in landmarks]
