@@ -164,7 +164,7 @@ try:
                         if result:
                             x1_area, y1_area, x2_area, y2_area, pixel_per_meter_h, pixel_per_meter_v, z = result
                             if pixel_per_meter_h != 0 and pixel_per_meter_v != 0:  # Ensure no division by zero
-                                cv2.rectangle(color_image, (x1_area, y1_area), (x2_area, y2_area), (0, 255, 0), 2)
+                                cv2.rectangle(color_image, (x1_area, y1_area), (x2_area, y2_area), (0, 0, 255), 2)
                                 ground_area_count += 1
 
             # Count heads in the area of 1m^2 if ground areas can be calculated
@@ -185,11 +185,6 @@ try:
         # Press 'q' to exit
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
-        # Maintain 10 FPS
-        elapsed_time = time.time() - start_time
-        sleep_time = max(0, (1.0 / 10) - elapsed_time)
-        time.sleep(sleep_time)
 
 finally:
     # Stop streaming
