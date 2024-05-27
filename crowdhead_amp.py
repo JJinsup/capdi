@@ -16,9 +16,8 @@ from utils.general import non_max_suppression, scale_coords, check_img_size
 from utils.torch_utils import select_device, time_sync
 
 # Custom function to plot one box
-def plot_one_box(x, img, color=None, label=None, line_thickness=3):
+def plot_one_box(x, img, color=(0, 255, 0), label=None, line_thickness=3):
     tl = line_thickness or round(0.002 * max(img.shape[0:2]))  # line thickness
-    color = color or [random.randint(0, 255) for _ in range(3)]
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
     cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
     if label:
@@ -26,7 +25,7 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
         t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
         c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
         cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
-        cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+        cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, (225, 255, 255), thickness=tf, lineType=cv2.LINE_AA)
 
 def show_warning(message):
     root = tk.Tk()
@@ -34,7 +33,7 @@ def show_warning(message):
     messagebox.showwarning("Warning", message)
     root.destroy()
 
-def calculate_ground_area(depth_image, depth_scale, box, max_depth=20.0, angle=-45):
+def calculate_ground_area(depth_image, depth_scale, box, max_depth=30.0, angle=45):
     x1, y1, x2, y2 = map(int, box)
     cx = (x1 + x2) // 2
     cy = (y1 + y2) // 2
@@ -59,36 +58,40 @@ def calculate_ground_area(depth_image, depth_scale, box, max_depth=20.0, angle=-
     fov_h_rad = np.radians(fov_h)
     fov_v_rad = np.radians(fov_v)
 
-    pixel_width = depth_image.shape[1]
-    pixel_height = depth_image.shape[0]
+    # Calculate width and height in meters at ground level
+    width_in_meters = 2 * z_ground * np.tan(fov_h_rad / 2)
+    height_in_meters = 2 * z_ground * np.tan(fov_v_rad / 2)
 
-    # Calculate pixel per meter
-    pixel_per_meter_h = pixel_width / (2 * z_horizontal * np.tan(fov_h_rad / 2))
-    pixel_per_meter_v = pixel_height / (2 * z_ground * np.tan(fov_v_rad / 2))
+    # Calculate pixels per meter
+    pixel_per_meter_h = 640 / width_in_meters
+    pixel_per_meter_v = 480 / height_in_meters
 
-    # Calculate the area in pixels
-    area_width_pixels = int(1 * pixel_per_meter_h)
-    area_height_pixels = int(1 * pixel_per_meter_v)
+    side_length_h = int(1 * pixel_per_meter_h)
+    side_length_v = int(1 * pixel_per_meter_v)
 
-    x1_area = max(0, cx - area_width_pixels // 2)
-    y1_area = max(0, cy - area_height_pixels // 2)
-    x2_area = min(pixel_width, cx + area_width_pixels // 2)
-    y2_area = min(pixel_height, cy + area_height_pixels // 2)
+    x1_area = max(0, cx - side_length_h // 2)
+    y1_area = max(0, cy - side_length_v // 2)
+    x2_area = min(640, cx + side_length_h // 2)
+    y2_area = min(480, cy + side_length_v // 2)
 
-    return (x1_area, y1_area, x2_area, y2_area, pixel_per_meter_h, pixel_per_meter_v, z)
+    return x1_area, y1_area, x2_area, y2_area, pixel_per_meter_h, pixel_per_meter_v, z
 
-def count_heads_in_area(pred, depth_image, depth_scale, max_depth=20.0, area_threshold=1.0):
+
+def count_heads_in_area(pred, depth_image, depth_scale, max_depth=30.0, area_threshold=1.0):
     head_count = 0
+
     for det in pred:
         if det is not None and len(det):
             for *xyxy, conf, cls in det:
-                result = calculate_ground_area(depth_image, depth_scale, xyxy, max_depth)
-                if result:
-                    x1_area, y1_area, x2_area, y2_area, pixel_per_meter_h, pixel_per_meter_v, z = result
-                    if z <= max_depth:
-                        area = (x2_area - x1_area) * (y2_area - y1_area) / (pixel_per_meter_h * pixel_per_meter_v)
-                        if area <= area_threshold:
-                            head_count += 1
+                if conf > 0.5:  # Add confidence threshold to filter weak detections
+                    result = calculate_ground_area(depth_image, depth_scale, xyxy, max_depth)
+                    if result:
+                        x1_area, y1_area, x2_area, y2_area, pixel_per_meter_h, pixel_per_meter_v, z = result
+                        if z > 0 and z <= max_depth:  # Ensure z is within a valid range
+                            area = (x2_area - x1_area) * (y2_area - y1_area) / (pixel_per_meter_h * pixel_per_meter_v)
+                            if 0 < area <= area_threshold:  # Ensure area is positive and within the threshold
+                                head_count += 1
+
     return head_count
 
 threshold = 12
@@ -170,12 +173,12 @@ try:
 
         # Count heads in the area of 1m^2 if ground areas can be calculated
         if ground_area_count > 0:
-            head_count = count_heads_in_area(pred, depth_image, depth_scale, max_depth=20.0, area_threshold=1.0)
+            head_count = count_heads_in_area(pred, depth_image, depth_scale, max_depth=30.0, area_threshold=1.0)
             if head_count >= 6:
                 show_warning("Warning: More than 6 people in 1m^2 area!")
         else:
             head_count = detected_heads_count
-            if head_count >= threshold:
+            if detected_heads_count >= threshold:
                 show_warning(f"Warning: More than {threshold} people detected!")
 
         cv2.putText(color_image, f'People in 1m^2 area: {head_count}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
