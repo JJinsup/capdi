@@ -38,7 +38,6 @@ def calculate_ground_area(depth_image, depth_scale, box, max_depth=30.0, angle=4
     cx = (x1 + x2) // 2
     cy = (y1 + y2) // 2
 
-    # Ensure the indices are within bounds
     if cx >= depth_image.shape[1] or cy >= depth_image.shape[0]:
         return None
 
@@ -47,22 +46,18 @@ def calculate_ground_area(depth_image, depth_scale, box, max_depth=30.0, angle=4
     if z <= 0 or z > max_depth:
         return None
 
-    # 카메라 기울기 고려
     theta_rad = np.radians(angle)
     z_ground = z * np.cos(theta_rad)
     z_horizontal = z * np.sin(theta_rad)
 
-    # Horizontal and Vertical FOV in radians
     fov_h = 87  # degrees
     fov_v = 58  # degrees
     fov_h_rad = np.radians(fov_h)
     fov_v_rad = np.radians(fov_v)
 
-    # Calculate width and height in meters at ground level
     width_in_meters = 2 * z_ground * np.tan(fov_h_rad / 2)
     height_in_meters = 2 * z_ground * np.tan(fov_v_rad / 2)
 
-    # Calculate pixels per meter
     pixel_per_meter_h = 640 / width_in_meters
     pixel_per_meter_v = 480 / height_in_meters
 
