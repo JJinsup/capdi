@@ -79,7 +79,7 @@ def count_heads_in_area(pred, depth_image, depth_scale, max_depth=30.0, area_thr
         if det is not None and len(det):
             for *xyxy, conf, cls in det:
                 if conf > 0.5:  # Add confidence threshold to filter weak detections
-                    result = calculate_ground_area(depth_image, depth_scale, xyxy, max_depth)
+                    result = calculate_1m2_area(depth_image, depth_scale, xyxy, max_depth)
                     if result:
                         x1_area, y1_area, x2_area, y2_area, pixel_per_meter_h, pixel_per_meter_v, z = result
                         if z > 0 and z <= max_depth:  # Ensure z is within a valid range
@@ -159,7 +159,7 @@ try:
                     plot_one_box(xyxy, color_image, label=label, color=(255, 0, 0), line_thickness=2)
 
                     # Calculate ground area and draw on image
-                    result = calculate_ground_area(depth_image, depth_scale, xyxy)
+                    result = calculate_1m2_area(depth_image, depth_scale, xyxy)
                     if result:
                         x1_area, y1_area, x2_area, y2_area, pixel_per_meter_h, pixel_per_meter_v, z = result
                         if pixel_per_meter_h != 0 and pixel_per_meter_v != 0:  # Ensure no division by zero
