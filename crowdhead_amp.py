@@ -33,7 +33,7 @@ def show_warning(message):
     messagebox.showwarning("Warning", message)
     root.destroy()
 
-def calculate_ground_area(depth_image, depth_scale, box, max_depth=30.0, angle=45):
+def calculate_1m2_area(depth_image, depth_scale, box, max_depth=30.0, angle=45):
     x1, y1, x2, y2 = map(int, box)
     cx = (x1 + x2) // 2
     cy = (y1 + y2) // 2
