@@ -2,7 +2,8 @@ import numpy as np
 import cv2
 import dlib
 from scipy.spatial import procrustes
-
+from sklearn.metrics.pairwise import cosine_similarity
+from scipy.spatial.distance import directed_hausdorff
 
 LEFT_EYE_INDICES = [36, 37, 38, 39, 40, 41]
 RIGHT_EYE_INDICES = [42, 43, 44, 45, 46, 47]
@@ -133,16 +134,63 @@ def compare_landmarks_procrustes(landmarks1, landmarks2, threshold):
     if len(landmarks1) != len(landmarks2):
         raise ValueError("Number of landmarks must be the same for comparison.")
     
-    # Normalize the landmarks by scaling them between 0 and 1
-    landmarks1 = np.array(landmarks1)
-    landmarks2 = np.array(landmarks2)
-    
-    landmarks1 = (landmarks1 - landmarks1.min(0)) / landmarks1.ptp(0)
-    landmarks2 = (landmarks2 - landmarks2.min(0)) / landmarks2.ptp(0)
-    
     disparity = procrustes_analysis(landmarks1, landmarks2)
     
     if disparity < threshold:
-            return disparity, True
+        return disparity, True
     else:
-            return disparity, False
+        return disparity, False
+    
+def cosine_similarity_analysis(landmarks1, landmarks2):
+    """
+    Perform Cosine Similarity analysis to compare two sets of landmarks.
+    """
+    # Flatten the landmark arrays to 1D arrays
+    flat_landmarks1 = np.array(landmarks1).flatten().reshape(1, -1)
+    flat_landmarks2 = np.array(landmarks2).flatten().reshape(1, -1)
+    
+    # Compute cosine similarity
+    similarity = cosine_similarity(flat_landmarks1, flat_landmarks2)[0][0]
+
+    inverted_similarity = 1 - similarity
+    return inverted_similarity
+
+def compare_landmarks_cosine(landmarks1, landmarks2, threshold):
+    """
+    Compare two sets of landmarks using Cosine Similarity analysis.
+    """
+    if len(landmarks1) != len(landmarks2):
+        raise ValueError("Number of landmarks must be the same for comparison.")
+    
+    inverted_similarity = cosine_similarity_analysis(landmarks1, landmarks2)
+    
+    if inverted_similarity < threshold:
+        return inverted_similarity, True
+    else:
+        return inverted_similarity, False
+    
+def hausdorff_analysis(landmarks1, landmarks2):
+    """
+    Perform Hausdorff distance analysis to compare two sets of landmarks.
+    """
+    # Convert landmarks to numpy arrays
+    landmarks1 = np.array(landmarks1)
+    landmarks2 = np.array(landmarks2)
+    
+    # Compute Hausdorff distance
+    hausdorff_dist = max(directed_hausdorff(landmarks1, landmarks2)[0], directed_hausdorff(landmarks2, landmarks1)[0])
+    return hausdorff_dist
+
+def compare_landmarks_hausdorff(landmarks1, landmarks2, threshold):
+    """
+    Compare two sets of landmarks using Hausdorff distance analysis.
+    """
+    if len(landmarks1) != len(landmarks2):
+        raise ValueError("Number of landmarks must be the same for comparison.")
+    
+    hausdorff_dist = hausdorff_analysis(landmarks1, landmarks2)
+    
+    if hausdorff_dist <= threshold:
+        return hausdorff_dist, True
+    else:
+        return hausdorff_dist, False
